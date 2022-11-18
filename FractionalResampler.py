@@ -1,4 +1,7 @@
 import numpy as np
+import matplotlib.pyplot as plt
+import scipy.signal as sig
+from CustomLib.DspLib import *
 
 def FractionalResampler(x,up,down):
     tempList=[]
@@ -17,7 +20,7 @@ def FractionalResampler(x,up,down):
         Cnt=0
         start=1
         for val in x:
-            if(start==1 or Cnt+up>down):
+            if(start==1 or Cnt>down-up):
                 tempList.append(val)
                 if(start==1):
                     start=0
@@ -31,16 +34,41 @@ def FractionalResampler(x,up,down):
         return x
 
 
-points=100
-test_vals=[]
-for i in range(points):
-    test_vals.append(i)
-vecLen=len(test_vals)
+#Test Parameters
 
-for i in range(8):
-    for j in range(8):
-        RetList=FractionalResampler(test_vals,i+1,j+1)
-        ExpRatio=(i+1)/(j+1)
-        ActRatio=len(RetList)/vecLen
-        print("Up: "+str(i+1)+ " Down: "+str(j+1)+" Expected Ratio: "+str(ExpRatio)+" Actual Ratio : " +str(ActRatio))
-        print(RetList)    
+points=3000
+fs=100e6
+fc=3e6
+upPoints=[1,3,8]
+dnPoints=[1,3,8]
+
+
+
+test_vals=GenerateBLData(points,fs,fc)
+FigList=[]
+AxsList=[]
+[Fig,Axs]=PlotSpectrum(test_vals,fsHz=fs,scaleTo='MHz',Title="Starting Spectrum")
+FigList.append(Fig)
+AxsList.append(Axs)
+
+for up in upPoints:
+    for down in dnPoints:
+        RetList=FractionalResampler(test_vals,up,down)
+        
+        ExpRatio=(up)/(down)
+        ActRatio=len(RetList)/points
+        
+        NewFS=fs*ActRatio
+        b=sig.firwin(32,fc*1.3,fs=NewFS)
+        FilteredData=sig.lfilter(b,1,RetList)
+        
+        print("Up: "+str(up)+ " Down: "+str(down)+" Expected Ratio: "+str(ExpRatio)+" Actual Ratio : " +str(ActRatio))
+        [Fig,Axs]=PlotSpectrum(RetList,fsHz=NewFS,scaleTo='MHz',Title="Up:"+str(up)+" Down:"+str(down)+" Spectrum")
+        FigList.append(Fig)
+        AxsList.append(Axs)
+        
+        [Fig,Axs]=PlotSpectrum(FilteredData,fsHz=NewFS,scaleTo='MHz',Title="Up:"+str(up)+" Down:"+str(down)+"Filtered Spectrum")
+        FigList.append(Fig)
+        AxsList.append(Axs)
+        
+plt.show()        
