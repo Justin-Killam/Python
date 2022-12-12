@@ -10,12 +10,13 @@ from CustomLib import PolyphaseResampler as pprs
 
 # Function for generating test data so data can be change
 # without changing code body
-def GenerateTestData(points,StartFS,SigF,StartW):
+def GenerateTestData(points,StartFS,SigF,StartW,bw):
     data=[]
     for i in range(points):
         data.append(math.cos(i*StartW))
     # data=GenerateBLData(points,StartFS,SigF)
-    return data
+    intData,fixedData=Quantize(data,bw)
+    return fixedData
     
 ###########################################################################
 #                      Configuration Variables
@@ -24,7 +25,7 @@ def GenerateTestData(points,StartFS,SigF,StartW):
 #Filter Configuration
 up=32
 down=33
-multipliers=16
+multipliers=8
 filtTaps=multipliers*up
 #Ensuring Odd Number of Coefficients
 if(filtTaps%2==0):
@@ -46,6 +47,9 @@ FilterWc=FtoW(FilterF,PostUpFS)
 
 PlotLimits=[-150,10]
 
+coeffFrac=15
+inFrac=15
+outFrac=16
 ###########################################################################
 
 
@@ -61,10 +65,13 @@ AxesList=[]
 ###########################################################################
 
 # Test Signal Generation
-TestSignal=GenerateTestData(TestPoints,StartFS,SigF,StartW) 
+TestSignal=GenerateTestData(TestPoints,StartFS,SigF,StartW,inFrac) 
 
 #Creating Resampler Object
 resampler=pprs.PolyphaseResampler(up,down,multipliers,filtTaps,FilterWc)
+coeffs=resampler.GetFilterCoeffs()
+intCoeffs,newCoeffs=Quantize(coeffs,coeffFrac)
+resampler.ManualFilterCoeffs(newCoeffs)
 
 #Resampler
 OutSignal=[]
@@ -72,7 +79,7 @@ for val in TestSignal:
     retVals=resampler.ProcessNewSample(val)
     for outval in retVals:
         OutSignal.append(outval)
-
+intOut,OutSignal=Quantize(OutSignal,outFrac)
 
 ###########################################################################
 #                      Plotting

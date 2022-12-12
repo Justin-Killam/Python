@@ -73,7 +73,6 @@ Returns:
 ###########################################################################
     # Generate filter coefficients (Private Method)
     def __GenerateCoeffs(self,filtTaps,wc):
-        print(wc)
         coeffs=sig.firwin(filtTaps,wc,fs=2*math.pi,window='blackmanharris')
         coeffList=[]
         for coeff in coeffs:
@@ -100,7 +99,7 @@ Returns:
         sum=0
         i=0
         for val in self.delayLine:
-            sum+=self.coeffs[self.phase+i*self.up]*val
+            sum+=self.coeffs[self.phase+i*self.up]*float(val)
             i+=1
         return sum
 ###########################################################################
@@ -191,9 +190,12 @@ Arguments:
   b : a list of filter coefficients
 ###########################################################################
         """
-        self.coeffs=b
-        while(len(self.coeffs)<self.maxTaps):
-            self.coeffs.append(0)
+        newCoeffs=[]
+        for val in b:
+            newCoeffs.append(val)
+        while(len(newCoeffs)<self.maxTaps):
+            newCoeffs.append(0)
+        self.coeffs=newCoeffs
         self.delayLine=self.__InitDelay()
         self.phase=0
 ###########################################################################

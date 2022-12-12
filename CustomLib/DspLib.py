@@ -158,11 +158,14 @@ Returns:
   Quantized data scaled back to its fixed point value
 ###########################################################################
     """
-    
-    scaled= np.multiply(x,2**fracBits)
-    integerVal= np.around(scaled)
-    fixedVal=np.divide(scaled,2**fracBits)
-    return integerVal,fixedVal
+    intList=[]
+    fixedList=[]
+    scale=(2**fracBits)
+    for val in x:
+        scaled=val*scale
+        intList.append(round(scaled))
+        fixedList.append(round(scaled)/scale)
+    return intList,fixedList
 
 
 
